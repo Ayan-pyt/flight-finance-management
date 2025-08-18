@@ -1,27 +1,37 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/user');
 
-module.exports = function(req, res, next) {
-    // Get token from header
-    const authHeader = req.header('Authorization');
+// Middleware to protect routes - checks for a valid JWT token
+exports.protect = async (req, res, next) => {
+    let token;
 
-    // Check if not token
-    if (!authHeader) {
-        return res.status(401).json({ message: 'No token, authorization denied' });
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        try {
+            // Get token from header
+            token = req.headers.authorization.split(' ')[1];
+
+            // Verify token
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+            // Get user from the token and attach it to the request object
+            req.user = await User.findById(decoded.id).select('-password');
+
+            next();
+        } catch (error) {
+            res.status(401).json({ message: 'Not authorized, token failed' });
+        }
     }
 
-    // The token is expected to be in the format "Bearer <token>"
-    const token = authHeader.split(' ')[1];
     if (!token) {
-        return res.status(401).json({ message: 'Token format is invalid, authorization denied' });
+        res.status(401).json({ message: 'Not authorized, no token' });
     }
+};
 
-    try {
-        // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        // Add user from payload to the request object
-        req.user = decoded.user;
+// Middleware to check if the authenticated user is an admin
+exports.admin = (req, res, next) => {
+    if (req.user && req.user.role === 'admin') {
         next();
-    } catch (err) {
-        res.status(401).json({ message: 'Token is not valid' });
+    } else {
+        res.status(403).json({ message: 'Not authorized as an admin' });
     }
 };

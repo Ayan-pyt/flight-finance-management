@@ -11,8 +11,12 @@ function LoginForm({ onLogin, switchToSignup }) {
     setError("");
     try {
       const res = await API.post("/auth/login", { email, password });
+      
+      // Store the token and the user's role in local storage
       localStorage.setItem("token", res.data.token);
-      onLogin();
+      localStorage.setItem("userRole", res.data.user.role); // <-- ADDED: Store the user's role
+      
+      onLogin(res.data.user.role); // <-- UPDATED: Pass the user's role to the onLogin handler
     } catch (err) {
       setError("Invalid credentials. Please try again.");
     }

@@ -1,23 +1,24 @@
-// routes/feedbacks.js
-
+// backend/routes/feedbacks.js
 const express = require('express');
 const router = express.Router();
-const Feedback = require('../models/Feedback');
 
-router.post('/', async (req, res) => {
-  try {
-    const { flightNumber, name, email, feedback } = req.body;
-    if (!flightNumber || !name || !email || !feedback) {
-      return res.status(400).json({ error: "All fields are required." });
-    }
-    const fb = new Feedback({ flightNumber, name, email, feedback });
-    await fb.save();
-    res.json({ message: "Feedback submitted!" });
-  } catch (err) {
-    // ⬇️ Place this line here! (inside catch)
-    console.error('Feedback save error:', err);
-    res.status(500).json({ error: "Server error saving feedback." });
-  }
-});
+// Import controller functions
+const {
+  createFeedback,
+  getAllFeedback,
+} = require('../controllers/feedbackController');
+
+// Import security middleware
+const { verifyToken, verifyAdmin } = require('../middleware/adminAuth');
+
+// @route   POST /api/feedback
+// @desc    Allow any user to submit feedback
+// @access  Public
+router.route('/').post(createFeedback);
+
+// @route   GET /api/feedback
+// @desc    Allow only admins to view all feedback
+// @access  Private/Admin
+router.route('/').get(verifyToken, verifyAdmin, getAllFeedback);
 
 module.exports = router;

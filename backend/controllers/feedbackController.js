@@ -1,20 +1,47 @@
+// backend/controllers/feedbackController.js
 const Feedback = require('../models/Feedback');
 
-exports.leaveFeedback = async (req, res) => {
+// @desc    Create a new feedback entry
+// @route   POST /api/feedback
+// @access  Public
+const createFeedback = async (req, res) => {
   try {
-    const feedback = await Feedback.create({ ...req.body, user: req.user.id });
-    res.status(201).json(feedback);
+    const { name, email, flightNumber, rating, feedback } = req.body;
+
+    // Basic validation
+    if (!name || !email || !rating || !feedback) {
+      return res.status(400).json({ success: false, error: "Please fill in all required fields." });
+    }
+
+    const newFeedback = await Feedback.create({
+      name,
+      email,
+      flightNumber,
+      rating,
+      feedback,
+    });
+
+    res.status(201).json({ success: true, data: newFeedback });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('Feedback creation error:', err);
+    res.status(500).json({ success: false, error: 'Server error while submitting feedback.' });
   }
 };
 
-exports.getFeedback = async (req, res) => {
+// @desc    Get all feedback entries
+// @route   GET /api/feedback
+// @access  Private/Admin
+const getAllFeedback = async (req, res) => {
   try {
-    const feedback = await Feedback.find({ flight: req.params.id }).populate('user', 'name');
-    res.json(feedback);
+    // Sort by newest first
+    const feedbacks = await Feedback.find({}).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, count: feedbacks.length, data: feedbacks });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, error: 'Server Error' });
   }
 };
 
+module.exports = {
+  createFeedback,
+  getAllFeedback,
+};
