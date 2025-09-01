@@ -1,3 +1,5 @@
+// File: /src/App.js
+
 import React, { useState, useEffect } from 'react';
 import { Plane, Home, Search, BookOpen, MessageSquare, Users, LogOut, Menu, X } from 'lucide-react';
 
@@ -6,7 +8,7 @@ import AirlineLandingPage from './components/AirlineLandingPage';
 import AdminDashboard from './components/AdminDashboard';
 import FlightList from './components/FlightList';
 import UserDashboard from './components/UserDashboard';
-import FeedbackView from './components/FeedbackView'; // <-- Import the new component
+import FeedbackView from './components/FeedbackView';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -17,15 +19,18 @@ function App() {
   const [publicView, setPublicView] = useState('home');
   const [flightSearchQuery, setFlightSearchQuery] = useState(null);
 
+  // === CORRECTION START ===
+  // This useEffect now correctly checks for the 'userInfo' object in localStorage.
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const savedUserRole = localStorage.getItem('userRole');
-    if (token && savedUserRole) {
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      const parsedUser = JSON.parse(userInfo);
       setIsLoggedIn(true);
-      setUserRole(savedUserRole);
+      setUserRole(parsedUser.role);
     }
     setIsLoading(false);
   }, []);
+  // === CORRECTION END ===
 
   const handleLogin = (role) => {
     setIsLoggedIn(true);
@@ -34,15 +39,18 @@ function App() {
     setPublicView('home');
   };
 
+  // === CORRECTION START ===
+  // The logout function now correctly removes the 'userInfo' item.
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userRole');
+    localStorage.removeItem('userInfo');
     setIsLoggedIn(false);
     setUserRole(null);
     setCurrentView('dashboard');
     setPublicView('home');
     setSidebarOpen(false);
+    // window.location.reload(); // Optional: force a reload on logout as well
   };
+  // === CORRECTION END ===
 
   const handleFlightSearch = (query) => {
     setFlightSearchQuery(query);
@@ -66,6 +74,7 @@ function App() {
     if (publicView === 'flights') {
       return <FlightList isLoggedIn={false} searchQuery={flightSearchQuery} onNewSearch={handleNewSearch} />;
     }
+    // The AirlineLandingPage likely contains your LoginForm. It passes the handleLogin function.
     return <AirlineLandingPage onLogin={handleLogin} onFlightSearch={handleFlightSearch} />;
   }
 
@@ -88,7 +97,6 @@ function App() {
         return <FlightList isLoggedIn={isLoggedIn} searchQuery={flightSearchQuery} onNewSearch={() => setCurrentView('dashboard')} />;
       case 'bookings':
         return <BookingsView />;
-      // --- UPDATED: Use the new FeedbackView component ---
       case 'feedback':
         return <FeedbackView />;
       case 'admin-panel':
@@ -117,92 +125,3 @@ const BookingsView = () => <div className="p-6"><h1 className="text-2xl font-bol
 const AccessDenied = () => <div className="p-6 text-center text-red-500"><h1 className="text-2xl font-bold">Access Denied</h1></div>;
 
 export default App;
-
-
-
-
-// // frontend/src/App.js
-// import React, { useState, useEffect } from 'react';
-// import LoginForm from './components/LoginForm';
-// import AdminDashboard from './components/AdminDashboard';
-// // Import your other components
-// // import UserDashboard from './components/UserDashboard';
-
-// function App() {
-//   const [isLoggedIn, setIsLoggedIn] = useState(false);
-//   const [userRole, setUserRole] = useState(null);
-//   const [isLoading, setIsLoading] = useState(true);
-
-//   useEffect(() => {
-//     // Check if user is already logged in
-//     const token = localStorage.getItem('token');
-//     const savedUserRole = localStorage.getItem('userRole');
-    
-//     if (token && savedUserRole) {
-//       setIsLoggedIn(true);
-//       setUserRole(savedUserRole);
-//     }
-//     setIsLoading(false);
-//   }, []);
-
-//   const handleLogin = (role) => {
-//     setIsLoggedIn(true);
-//     setUserRole(role);
-//   };
-
-//   const handleLogout = () => {
-//     localStorage.removeItem('token');
-//     localStorage.removeItem('userRole');
-//     setIsLoggedIn(false);
-//     setUserRole(null);
-//   };
-
-//   if (isLoading) {
-//     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-//   }
-
-//   if (!isLoggedIn) {
-//     return <LoginForm onLogin={handleLogin} />;
-//   }
-
-//   return (
-//     <div className="min-h-screen bg-gray-50">
-//       {/* Navigation Bar */}
-//       <nav className="bg-white shadow-sm border-b">
-//         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//           <div className="flex justify-between items-center h-16">
-//             <div className="flex items-center">
-//               <h1 className="text-xl font-bold text-gray-900">Flight Management System</h1>
-//               <span className="ml-4 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-//                 {userRole === 'admin' ? 'Admin' : 'User'}
-//               </span>
-//             </div>
-//             <button
-//               onClick={handleLogout}
-//               className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-//             >
-//               Logout
-//             </button>
-//           </div>
-//         </div>
-//       </nav>
-
-//       {/* Main Content */}
-//       <main>
-//         {userRole === 'admin' ? (
-//           <AdminDashboard />
-//         ) : (
-//           // Your regular user dashboard/components
-//           <div className="p-8">
-//             <h2 className="text-2xl font-bold mb-4">User Dashboard</h2>
-//             <p>Welcome! You have user-level access.</p>
-//             {/* Add your user components here */}
-//             {/* <UserDashboard /> */}
-//           </div>
-//         )}
-//       </main>
-//     </div>
-//   );
-// }
-
-// export default App;

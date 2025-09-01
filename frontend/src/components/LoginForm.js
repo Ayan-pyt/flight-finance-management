@@ -5,20 +5,37 @@ function LoginForm({ onLogin, switchToSignup }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsSubmitting(true);
     try {
-      const res = await API.post("/auth/login", { email, password });
+      // This API call is successful, as proven by your screenshot's "200 OK" status.
+      const res = await API.post("/api/auth/login", { email, password });
       
-      // Store the token and the user's role in local storage
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("userRole", res.data.user.role); // <-- ADDED: Store the user's role
+      // Store the entire user object, including the token, in local storage.
+      localStorage.setItem("userInfo", JSON.stringify(res.data));
       
-      onLogin(res.data.user.role); // <-- UPDATED: Pass the user's role to the onLogin handler
+      // This function tells the parent component about the successful login.
+      if (onLogin) {
+        onLogin(res.data.role);
+      }
+
+      // THE FINAL FIX: Force a page reload. This is the most reliable way 
+      // to update the entire application to a "logged-in" state.
+      window.location.reload();
+
     } catch (err) {
-      setError("Invalid credentials. Please try again.");
+      // This code runs if the API call fails (e.g., wrong password).
+      if (err.response && err.response.data.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Login failed. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -49,14 +66,15 @@ function LoginForm({ onLogin, switchToSignup }) {
         <button
           className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
           type="submit"
+          disabled={isSubmitting}
         >
-          Login
+          {isSubmitting ? "Signing In..." : "Sign In"}
         </button>
         {error && <div className="text-red-600 text-center">{error}</div>}
         <div className="bg-blue-50 text-blue-900 text-xs rounded p-2 mt-2 text-center">
-          <b>Demo Login:</b><br />
-          Email: <code>demo@flight.com</code><br />
-          Password: <code>demo123</code>
+          <b>Demo Accounts:</b><br />
+          Admin: <code>admin@airline.com | demo123</code><br/>
+          User: <code>user@airline.com | demo123</code>
         </div>
         <button
           type="button"

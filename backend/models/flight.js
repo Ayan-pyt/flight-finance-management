@@ -1,3 +1,5 @@
+// File: /models/flight.js
+
 const mongoose = require('mongoose');
 
 const FlightSchema = new mongoose.Schema({
@@ -7,7 +9,12 @@ const FlightSchema = new mongoose.Schema({
   departureTime: Date,
   arrivalTime: Date,
   price: Number,
-  seatsAvailable: Number
+  seatsAvailable: Number,
+  status: {
+    type: String,
+    enum: ['Scheduled', 'On Time', 'Delayed', 'Departed', 'Arrival', 'Cancelled'],
+    default: 'Scheduled'
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('flight', FlightSchema);

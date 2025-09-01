@@ -1,36 +1,44 @@
-require('dotenv').config();
+// File: /backend/server.js
+
 const express = require('express');
+const dotenv = require('dotenv');
 const cors = require('cors');
-const connectDB = require('./db.js');
+const connectDB = require('./db.js'); // Assuming db.js handles the connection
+
+// Load environment variables from .env file at the very top
+dotenv.config();
+
+// Connect to MongoDB Database
+connectDB();
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
-
-// Middlewares
+// --- Middleware ---
+// Enable Cross-Origin Resource Sharing for all routes
 app.use(cors());
+// Enable the express body parser to read JSON from request bodies
 app.use(express.json());
 
-// Routes
+// --- API Routes ---
+// All your application routes are defined here
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/flights', require('./routes/flights'));
 app.use('/api/tickets', require('./routes/tickets'));
-app.use('/api/feedback', require('./routes/feedbacks.js'));
-
-// ADDED: Import and use the new cost management routes
-app.use('/api', require('./routes/costRoutes'));
-
-// NEW: Admin routes for sensitive data
+app.use('/api/feedbacks', require('./routes/feedbacks.js'));
 app.use('/api/admin', require('./routes/admin'));
-
 app.use('/api/reports', require('./routes/reportRoutes'));
+app.use('/api/budget', require('./routes/budgetRoutes'));
+app.use('/api/salaries', require('./routes/salaryRoutes'));
+app.use('/api/fuelcosts', require('./routes/fuelCostRoutes'));
+app.use('/api/maintenancecosts', require('./routes/maintenanceCostRoutes'));
+app.use('/api/operationalcosts', require('./routes/operationalCostRoutes'));
 
-// Health check route (optional but good practice)
+
+// Health check route
 app.get('/', (req, res) => {
-    res.send('API is running');
+    res.send('Flight Finance Management System API is running.');
 });
 
-// Start server
+// Start the server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server is running successfully on port ${PORT}`));

@@ -1,146 +1,87 @@
-// const User = require('../models/user');
-// const jwt = require('jsonwebtoken');
-
-// exports.register = async (req, res) => {
-//     const { email, password, role } = req.body;
-//     try {
-//         let user = await User.findOne({ email });
-//         if (user) return res.status(400).json({ message: 'User already exists' });
-
-//         user = new User({
-//             email,
-//             password,
-//             role
-//         });
-
-//         await user.save();
-
-//         res.status(201).json({ id: user._id, email: user.email, role: user.role });
-//     } catch (err) {
-//         res.status(500).json({ message: err.message });
-//     }
-// };
-
-// exports.login = async (req, res) => {
-//     const { email, password } = req.body;
-//     try {
-//         const user = await User.findOne({ email });
-//         if (!user) return res.status(400).json({ message: 'Invalid credentials' });
-
-//         const isMatch = await user.matchPassword(password);
-//         if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
-
-//         const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
-
-//         res.json({ token, user: { id: user._id, email: user.email, role: user.role } });
-//     } catch (err) {
-//         res.status(500).json({ message: err.message });
-//     }
-// };
-
-
-
-
-// backend/controllers/authController.js
-
-// This is the FIX: Changed '../models/user' to '../models/User'
-// backend/controllers/authController.js
-
-// THE FINAL FIX: Changed '../models/User' to '../models/user' to match your filename.
-const User = require('../models/user');
+const asyncHandler = require('express-async-handler');
+const User = require('../models/user'); // Make sure this path to your user model is correct
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
-// --- USER REGISTRATION LOGIC ---
-const registerUser = async (req, res) => {
-  // Get user details from the request body
-  const { name, email, password } = req.body;
-
-  // Basic validation
-  if (!name || !email || !password) {
-    return res.status(400).json({ msg: "Please provide name, email, and password." });
-  }
-
-  try {
-    // Check if a user with that email already exists
-    const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
-    if (existingUser) {
-      return res.status(400).json({ msg: "Email is already registered." });
-    }
-
-    // Create a new user instance
-    // (This assumes you have a pre-save hook in your User model to hash the password)
-    const newUser = new User({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      password,
+// Helper function to generate a JWT
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: '30d', // Token will expire in 30 days
     });
-
-    // Save the new user to the database
-    await newUser.save();
-
-    // Send a success response
-    res.status(201).json({ message: "Registration successful. You can now log in." });
-
-  } catch (err) {
-    console.error("Registration Error:", err.message);
-    res.status(500).json({ msg: "Server error during registration." });
-  }
 };
 
+// @desc    Authenticate user & get token (Login)
+// @route   POST /api/users/login
+// @access  Public
+const authUser = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
 
-// --- USER LOGIN LOGIC ---
-const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+    // 1. Check if user exists by email
+    const user = await User.findOne({ email });
 
-  try {
-    // Find the user by their email
-    const user = await User.findOne({ email: email.trim().toLowerCase() });
-    if (!user) {
-      return res.status(401).json({ msg: 'Invalid credentials.' });
-    }
-
-    // Compare the provided password with the stored password
-    // (This assumes you have a method called 'matchPassword' in your User model)
-    const isMatch = await user.matchPassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ msg: 'Invalid credentials.' });
-    }
-
-    // If credentials are correct, create a JSON Web Token
-    const payload = {
-      user: {
-        id: user.id,
-        role: user.role, // Make sure your User model has a 'role' field
-      },
-    };
-
-    jwt.sign(
-      payload,
-      process.env.JWT_SECRET, // IMPORTANT: Use the secret from your .env file
-      { expiresIn: '7d' },
-      (err, token) => {
-        if (err) throw err;
-        // Send the token and user info back to the client
+    // 2. If user exists, compare the entered password with the hashed password in the database
+    if (user && (await bcrypt.compare(password, user.password))) {
+        // 3. If password matches, send back user info and a valid token
         res.json({
-          token,
-          user: {
-            id: user.id,
+            _id: user._id,
             name: user.name,
             email: user.email,
             role: user.role,
-          },
+            token: generateToken(user._id),
         });
-      }
-    );
-  } catch (err) {
-    console.error("Login Error:", err.message);
-    res.status(500).json({ msg: "Server error during login." });
-  }
-};
+    } else {
+        // 4. If user doesn't exist or password doesn't match, send an error
+        res.status(401); // Unauthorized
+        throw new Error('Invalid email or password');
+    }
+});
+
+// @desc    Register a new user
+// @route   POST /api/users
+// @access  Public
+const registerUser = asyncHandler(async (req, res) => {
+    const { name, email, password, role } = req.body;
+
+    if (!name || !email || !password) {
+        res.status(400);
+        throw new Error('Please add all fields');
+    }
+
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+        res.status(400);
+        throw new Error('User already exists');
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+    const user = await User.create({
+        name,
+        email,
+        password: hashedPassword,
+        role: role || 'passenger', // Defaults to 'passenger' if no role is provided
+    });
+
+    if (user) {
+        res.status(201).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token: generateToken(user._id),
+        });
+    } else {
+        res.status(400);
+        throw new Error('Invalid user data');
+    }
+});
 
 
-// Export the functions to be used in the routes file
+// Make sure to export the functions
 module.exports = {
-  registerUser,
-  loginUser,
+    authUser,
+    registerUser,
 };

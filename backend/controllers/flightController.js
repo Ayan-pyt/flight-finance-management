@@ -1,11 +1,10 @@
-// backend/controllers/flightController.js
+// File: /controllers/flightController.js
 
 const Flight = require('../models/flight');
 
 // Show all flights OR search for flights based on query parameters
 exports.listFlights = async (req, res) => {
   try {
-    // --- DEBUG LOG 1: See what the server receives ---
     console.log('--- New Flight Search Request ---');
     console.log('Received query params:', req.query);
 
@@ -19,7 +18,6 @@ exports.listFlights = async (req, res) => {
       query.arrival = to;
     }
     if (date) {
-      // The date from the frontend 'YYYY-MM-DD' is interpreted as UTC midnight.
       const searchDate = new Date(date);
       const nextDay = new Date(date);
       nextDay.setDate(searchDate.getDate() + 1);
@@ -30,15 +28,10 @@ exports.listFlights = async (req, res) => {
       };
     }
 
-    // --- DEBUG LOG 2: See the final query being sent to MongoDB ---
     console.log('Constructed MongoDB query:', JSON.stringify(query, null, 2));
-
     const flights = await Flight.find(query);
-
-    // --- DEBUG LOG 3: See what was found in the database ---
     console.log(`Found ${flights.length} flights.`);
     console.log('---------------------------------');
-
 
     res.json({ success: true, count: flights.length, data: flights });
 
@@ -48,7 +41,7 @@ exports.listFlights = async (req, res) => {
   }
 };
 
-// Get single flight details (no changes)
+// Get single flight details
 exports.getFlight = async (req, res) => {
   try {
     const flight = await Flight.findById(req.params.id);
@@ -57,4 +50,30 @@ exports.getFlight = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+};
+
+// Update a flight's status
+exports.updateFlightStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+
+        const validStatuses = ['Scheduled', 'On Time', 'Delayed', 'Departed', 'Arrival', 'Cancelled'];
+        if (!status || !validStatuses.includes(status)) {
+            return res.status(400).json({ message: 'Invalid or missing status' });
+        }
+
+        const flight = await Flight.findById(req.params.id);
+
+        if (!flight) {
+            return res.status(404).json({ message: 'Flight not found' });
+        }
+
+        flight.status = status;
+        const updatedFlight = await flight.save();
+        res.json(updatedFlight);
+
+    } catch (error) {
+        console.error("Error updating flight status:", error);
+        res.status(500).json({ message: error.message });
+    }
 };

@@ -1,6 +1,7 @@
 // backend/controllers/operationalCostController.js
 
 const OperationalCost = require('../models/operationalCostModel');
+const { checkBudgetBeforeAddingExpense } = require('../services/budgetService');
 
 // @desc    Get all operational cost entries
 // @route   GET /api/costs/operational
@@ -19,6 +20,21 @@ const getOperationalCosts = async (req, res) => {
 // @access  Private/Admin
 const createOperationalCost = async (req, res) => {
     try {
+        // --- NEW: Budget Check Logic ---
+        const { cost } = req.body;
+        const newExpenseAmount = Number(cost) || 0;
+
+        const { canAfford, remainingBudget } = await checkBudgetBeforeAddingExpense(newExpenseAmount);
+
+        if (!canAfford) {
+            return res.status(400).json({
+                success: false,
+                error: `Cannot add expense. The cost of ${newExpenseAmount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })} exceeds the remaining budget of ${remainingBudget.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}.`
+            });
+        }
+        
+        // --- END: Budget Check Logic ---
+
         const newCost = await OperationalCost.create(req.body);
         res.status(201).json({ success: true, data: newCost });
     } catch (error) {

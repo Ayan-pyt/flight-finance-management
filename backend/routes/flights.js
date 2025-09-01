@@ -1,8 +1,14 @@
+// File: /routes/flights.js
+
 const express = require('express');
-const { listFlights, getFlight } = require('../controllers/flightController');
+const { listFlights, getFlight, updateFlightStatus } = require('../controllers/flightController');
 const router = express.Router();
 
-router.get('/', listFlights);         // GET /api/flights - List all flights
-router.get('/:id', getFlight);        // GET /api/flights/:id - Single flight
+const { protect, admin } = require('../middleware/authMiddleware');
+
+router.get('/', listFlights);
+router.get('/:id', getFlight);
+
+router.patch('/:id/status', protect, admin, updateFlightStatus);
 
 module.exports = router;

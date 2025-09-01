@@ -36,3 +36,112 @@
     transform: rotate(360deg);
   }
 }
+
+
+/* === NEW STYLES ADDED FOR FLIGHT TRACKING FEATURE START === */
+
+/* Status Badge Styles (for both Admin and Passenger view) */
+.status-badge {
+    display: inline-block;
+    padding: 0.3em 0.7em;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.375rem;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.status-scheduled { background-color: #0d6efd; }
+.status-on-time { background-color: #198754; }
+.status-delayed { background-color: #ffc107; color: #000; }
+.status-departed { background-color: #6c757d; }
+.status-arrival { background-color: #0dcaf0; color: #000; }
+.status-cancelled { background-color: #dc3545; }
+
+
+/* Admin General and Section Styles */
+.admin-dashboard {
+    padding: 2rem;
+}
+
+.admin-section {
+    margin-bottom: 2.5rem;
+}
+
+
+/* Admin Flight Management Table Styles */
+.flight-management-container {
+    margin-top: 1rem;
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.flight-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.flight-table th, .flight-table td {
+    border: 1px solid #dee2e6;
+    padding: 0.75rem;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.flight-table th {
+    background-color: #e9ecef;
+}
+
+.status-select {
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    cursor: pointer;
+    background-color: #fff;
+}
+
+
+/* Passenger Flight List Styles */
+.flight-list-container {
+    padding: 1rem;
+}
+
+.flight-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    background-color: #fff;
+    text-align: left;
+}
+
+.flight-status-container {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #eee;
+}
+
+.select-flight-btn {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    background-color: #0d6efd;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.select-flight-btn:hover {
+    background-color: #0b5ed7;
+}
+
+/* === NEW STYLES ADDED END === */
