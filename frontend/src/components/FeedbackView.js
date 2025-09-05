@@ -1,6 +1,6 @@
 // frontend/src/components/FeedbackView.js
 import React, { useState } from 'react';
-import API from '../api'; // Assuming your API instance is set up
+import API from '../api'; // Your API instance is set up
 import { Star, Send } from 'lucide-react';
 
 const FeedbackView = () => {
@@ -37,7 +37,11 @@ const FeedbackView = () => {
 
     setLoading(true);
     try {
-      const response = await API.post('/feedback', formData);
+      // --- START OF FIX ---
+      // CORRECTED: Added the required '/api' prefix to the URL to match the backend route.
+      const response = await API.post('/api/feedback', formData);
+      // --- END OF FIX ---
+
       if (response.data.success) {
         setSuccess('Thank you! Your feedback has been submitted successfully.');
         // Reset form
