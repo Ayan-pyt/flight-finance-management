@@ -92,7 +92,7 @@ userSchema.methods.matchPassword = async function(enteredPassword) {
 
 // --- THE FIX ---
 // The model name is now capitalized ('User'). This is the correct convention.
-const User = mongoose.model('User', userSchema);
-
-module.exports = User;
+// const User = mongoose.model('User', userSchema);
+module.exports = mongoose.models.User || mongoose.model('User', userSchema);
+// module.exports = User;
 
