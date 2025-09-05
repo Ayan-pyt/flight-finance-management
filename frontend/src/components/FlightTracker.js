@@ -148,9 +148,11 @@
 // export default FlightTracker;
 
 
+// File: /src/components/FlightTracker.js
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plane, CheckCircle, Clock, XCircle, Send } from 'lucide-react';
-import './FlightTracker.css'; // Import the CSS for animations
+import './FlightTracker.css'; // Make sure you have this CSS file for animations
 
 const FlightTracker = () => {
   const [flightNumberInput, setFlightNumberInput] = useState('');
@@ -180,14 +182,18 @@ const FlightTracker = () => {
     }
 
     try {
-      // CORRECTED: URL is now relative to use the proxy
-      const response = await fetch(`/api/flights/status/${flightNumberInput}`, {
+      // --- START OF FIX ---
+      // CORRECTED: The URL now includes '/admin/' to match the new, secure backend route.
+      const response = await fetch(`/api/flights/admin/status/${flightNumberInput}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
+      // --- END OF FIX ---
+
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to fetch flight data');
       setFlightData(data);
     } catch (err) {
+      // This will now correctly catch backend errors like "Flight not found".
       setError(err.message);
     } finally {
       setLoading(false);
@@ -196,9 +202,16 @@ const FlightTracker = () => {
 
   const handleUpdateStatus = async (newStatus) => {
     const token = getToken();
+    if (!flightData || !token) {
+        setError("Cannot update status without a selected flight or token.");
+        return;
+    }
+
     try {
-      // CORRECTED: URL is now relative to use the proxy
-      const response = await fetch(`/api/flights/status/${flightData._id}`, {
+      // --- START OF FIX ---
+      // CORRECTED: This URL is also updated to include '/admin/'.
+      const response = await fetch(`/api/flights/admin/status/${flightData._id}`, {
+      // --- END OF FIX ---
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -208,13 +221,18 @@ const FlightTracker = () => {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to update status');
+      
+      // Update the local state to instantly reflect the change
       setFlightData(data);
+      setError(''); // Clear previous errors on success
+
     } catch (err) {
       setError(err.message);
     }
   };
 
   const calculateProgress = useCallback(() => {
+    // ... (This function is correct and remains unchanged)
     if (!flightData) return;
     const now = new Date().getTime();
     const departure = new Date(flightData.departureTime).getTime();
@@ -235,6 +253,7 @@ const FlightTracker = () => {
   }, [flightData]);
 
   useEffect(() => {
+    // ... (This hook is correct and remains unchanged)
     calculateProgress();
     const interval = setInterval(() => {
       calculateProgress();
@@ -243,6 +262,7 @@ const FlightTracker = () => {
   }, [flightData, calculateProgress]);
 
   const getStatusIcon = (status) => {
+    // ... (This function is correct and remains unchanged)
     switch(status) {
       case 'On-Time':
       case 'Landed':
@@ -264,7 +284,7 @@ const FlightTracker = () => {
           type="text"
           value={flightNumberInput}
           onChange={(e) => setFlightNumberInput(e.target.value.toUpperCase())}
-          placeholder="Enter Flight Number (e.g., BG147)"
+          placeholder="Enter Flight Number (e.g., SK101)"
           className="flex-grow p-2 border rounded-md shadow-sm"
         />
         <button type="submit" disabled={loading} className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 flex items-center">

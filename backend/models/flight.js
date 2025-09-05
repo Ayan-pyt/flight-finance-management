@@ -24,41 +24,27 @@
 
 // File: /models/flight.js
 
+
+
+
+
+// File: /models/flight.js
+
 const mongoose = require('mongoose');
 
 const FlightSchema = new mongoose.Schema({
-  flightNumber: {
-    type: String,
-    required: true,
-    trim: true,
+  flightNumber: { type: String, required: true },
+  origin: { type: String, required: true },
+  destination: { type: String, required: true },
+  departureTime: { type: Date, required: true },
+  arrivalTime: { type: Date, required: true },
+  // CORRECTED: Explicitly made 'price' a required field with a minimum value.
+  price: { 
+    type: Number, 
+    required: [true, 'Path `price` is required.'], 
+    min: 0 
   },
-  // FIXED: Changed 'departure' and 'arrival' to 'origin' and 'destination' for clarity.
-  origin: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  destination: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  departureTime: {
-    type: Date,
-    required: true,
-  },
-  arrivalTime: {
-    type: Date,
-    required: true,
-  },
-  price: {
-    type: Number,
-    required: true,
-  },
-  seatsAvailable: {
-    type: Number,
-    default: 180 // Example default value
-  },
+  seatsAvailable: { type: Number, default: 180 },
   status: {
     type: String,
     enum: ['Scheduled', 'On-Time', 'Delayed', 'Departed', 'Arrival', 'Cancelled'],
@@ -66,5 +52,4 @@ const FlightSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-// FIXED: Changed model name to 'Flight' (singular, capitalized) which is a Mongoose convention.
 module.exports = mongoose.model('Flight', FlightSchema);
