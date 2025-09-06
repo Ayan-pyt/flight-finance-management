@@ -7,7 +7,6 @@ import API from '../api';
 // We now import the components directly from the 'recharts' library
 // instead of relying on the window object.
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-// --- END OF THE DEFINITIVE FIX ---
 
 
 const CustomizedReport = () => {

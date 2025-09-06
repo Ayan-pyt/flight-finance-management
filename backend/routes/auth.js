@@ -4,7 +4,6 @@ const express = require('express');
 const router = express.Router();
 
 // Import the functions from your controller.
-// CORRECTED: Changed 'loginUser' to 'authUser' to match the new controller file.
 const { registerUser, authUser } = require('../controllers/authController');
 
 // --- USER SIGNUP ---

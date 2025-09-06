@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import API from '../api';
 import BudgetManagement from './BudgetManagement';
